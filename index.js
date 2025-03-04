@@ -9,3 +9,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 //מקום לשמור את הנתונים
 const bloodPressureData = {};
+//כניסה לדף
+app.get('/', (req, res) => {
+    // כניסה ל לוקאל הוסט
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
