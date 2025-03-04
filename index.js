@@ -15,4 +15,6 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 return; 
         }
-        
+
+        //שמירת מדידה חדשה
+app.post('/bp/:userId', (req, res) => {
