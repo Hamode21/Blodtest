@@ -22,3 +22,9 @@ app.post('/bp/:userId', (req, res) => {
          // כשמישהו שולח נתונים לכתובת כמו /bp/user1 עם POST
     const userId = req.params.userId; // לוקח את שם המשתמש מהכתובת (למשל: user1)
     const { systolic, diastolic, pulse, date } = req.body; 
+
+    // בודק אם חסר ערך גבוה או נמוך
+    if (!systolic || !diastolic) {
+        res.status(400).json({ error: 'חייב לשלוח ערך גבוה ונמוך' }); // שולח שגיאה אם חסר
+        return; 
+    }
