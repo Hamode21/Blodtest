@@ -18,3 +18,7 @@ return;
 
         //שמירת מדידה חדשה
 app.post('/bp/:userId', (req, res) => {
+
+         // כשמישהו שולח נתונים לכתובת כמו /bp/user1 עם POST
+    const userId = req.params.userId; // לוקח את שם המשתמש מהכתובת (למשל: user1)
+    const { systolic, diastolic, pulse, date } = req.body; 
