@@ -5,3 +5,7 @@ const port = 3000;
 // הגדרת שרת
 app.use(express.json()); 
 app.use(express.static(path.join(__dirname, 'public')));
+
+
+//מקום לשמור את הנתונים
+const bloodPressureData = {};
