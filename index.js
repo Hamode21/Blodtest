@@ -13,3 +13,6 @@ const bloodPressureData = {};
 app.get('/', (req, res) => {
     // כניסה ל לוקאל הוסט
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
+return; 
+        }
+        
