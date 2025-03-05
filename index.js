@@ -144,6 +144,39 @@ app.get('/history/:userId', (req, res) => {
         res.status(404).json({ error: 'אין נתונים למשתמש הזה' });
         return;
     }
+    res.json({
+        userId: userId,
+        measurements: bloodPressureData[userId]
+    });
+});
+
+/**
+ * @swagger
+ * /history/{userId}:
+ *   get:
+ *     summary: קבלת היסטוריית מדידות עם הדגשות
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: startDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - in: query
+ *         name: endDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *     responses:
+ *       200:
+ *         description: היסטוריה עם ממוצעים והדגשות
+ *       404:
+ *         description: אין נתונים
+ */
 // לוקח את כל המדידות של המשתמש
     let measurements = bloodPressureData[userId];
 
