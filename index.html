@@ -151,3 +151,41 @@
                 document.getElementById('historyResults').innerHTML = 'יש בעיה!';
             });
         });
+
+                                 // טופס סיכום משתמשים
+        let summaryForm = document.getElementById('summaryForm');
+        summaryForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            let month = document.querySelector('#summaryForm [name="month"]').value;
+
+            fetch('/api/users-summary?month=' + month)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    document.getElementById('summaryResults').innerHTML = data.error;
+                } else {
+                    let html = '<p>חודש: ' + data.month + '</p>';
+                    html += '<table>';
+                    html += '<tr><th>משתמש</th><th>ממוצע ערך גבוה</th><th>ממוצע ערך נמוך</th><th>חריגות</th></tr>';
+                    
+                    data.summary.forEach(s => {
+                        html += '<tr>';
+                        html += '<td>' + s.userId + '</td>';
+                        html += '<td>' + (s.averageSystolic ? s.averageSystolic.toFixed(2) : '-') + '</td>';
+                        html += '<td>' + (s.averageDiastolic ? s.averageDiastolic.toFixed(2) : '-') + '</td>';
+                        html += '<td>' + s.outliers + '</td>';
+                        html += '</tr>';
+                    });
+                    
+                    html += '</table>';
+                    document.getElementById('summaryResults').innerHTML = html;
+                }
+            })
+            .catch(() => {
+                document.getElementById('summaryResults').innerHTML = 'יש בעיה!';
+            });
+        });
+    </script>
+</body>
+</html>
