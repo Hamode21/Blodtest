@@ -69,25 +69,12 @@ app.post('/bp/:userId', (req, res) => {
     });
 });
 
-//הצגת המדידות של משתמש
-app.get('/bp/:userId', (req, res) => {
+// הצגת היסטוריה עם תאריכים והדגשות
+app.get('/history/:userId', (req, res) => {
     const userId = req.params.userId;
+    const { startDate, endDate } = req.query; 
 
-    // בודק אם אין נתונים למשתמש הזה
     if (!bloodPressureData[userId]) {
-        res.status(404).json({ error: 'אין נתונים למשתמש הזה' }); // שגיאה אם אין כלום
-        return; // תיקנתי - בלי פסיק
+        res.status(404).json({ error: 'אין נתונים למשתמש הזה' });
+        return;
     }
-
-    // שולח את כל המדידות של המשתמש
-    res.json({
-        userId: userId, // שם המשתמש
-        measurements: bloodPressureData[userId] // הרשימה של המדידות
-    });
-});
-
-//מפעילים את השרת
-app.listen(port, () => {
-    // השרת מתחיל לעבוד ומקשיב ב-port 3000
-    console.log(`השרת עובד ב-http://localhost:${port}`); // מדפיס הודעה בטרמינל
-});
