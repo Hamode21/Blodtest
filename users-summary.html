@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>סיכום משתמשים</title>
+    <meta charset="UTF-8">
+    <style>
+        body { text-align: center; margin-top: 20px; }
+        form { text-align: right; }
+        input { margin: 5px; }
+        table { margin: 20px auto; border-collapse: collapse; }
+        th, td { border: 1px solid black; padding: 5px; }
+    </style>
+</head>
+<body>
+    <h1>סיכום מדידות לפי חודש</h1>
+
+    <form id="summaryForm">
+        <label>בחר חודש:</label>
+        <input type="month" name="month" required>
+        <br>
+        <button type="submit">הצג</button>
+    </form>
+
+    <div id="results"></div>
+
+    <script>
+        let form = document.getElementById('summaryForm');
+
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            let month = document.querySelector('[name="month"]').value;
+
+            fetch('/api/users-summary?month=' + month) // עדכון ל-/api/users-summary
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(data) {
+                if (data.error) {
+                    document.getElementById('results').innerHTML = data.error;
+                } else {
+                    let html = '<p>חודש: ' + data.month + '</p>';
+                    html += '<table>';
+                    html += '<tr><th>משתמש</th><th>ממוצע ערך גבוה</th><th>ממוצע ערך נמוך</th><th>חריגות</th></tr>';
+                    
+                    data.summary.forEach(s => {
+                        html += '<tr>';
+                        html += '<td>' + s.userId + '</td>';
+                        html += '<td>' + (s.averageSystolic ? s.averageSystolic.toFixed(2) : '-') + '</td>';
+                        html += '<td>' + (s.averageDiastolic ? s.averageDiastolic.toFixed(2) : '-') + '</td>';
+                        html += '<td>' + s.outliers + '</td>';
+                        html += '</tr>';
+                    });
+                    
+                    html += '</table>';
+                    document.getElementById('results').innerHTML = html;
+                }
+            })
+            .catch(function() {
+                document.getElementById('results').innerHTML = 'יש בעיה!';
+            });
+        });
+    </script>
+</body>
+</html>
