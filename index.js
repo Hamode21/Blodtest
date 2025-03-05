@@ -66,4 +66,7 @@ app.post('/bp/:userId', (req, res) => {
             });
 });
 
+//הצגת המדידות של משתמש
+app.get('/bp/:userId', (req, res) => {
+    const userId = req.params.userId;
 
