@@ -80,3 +80,13 @@ app.get('/history/:userId', (req, res) => {
     }
 // לוקח את כל המדידות של המשתמש
     let measurements = bloodPressureData[userId];
+
+// מסנן לפי תאריכים אם נתנו אותם
+    if (startDate && endDate) {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        measurements = measurements.filter(m => {
+            const measurementDate = new Date(m.date);
+            return measurementDate >= start && measurementDate <= end;
+        });
+    }
