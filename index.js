@@ -90,3 +90,8 @@ app.get('/history/:userId', (req, res) => {
             return measurementDate >= start && measurementDate <= end;
         });
     }
+// חישוב ממוצע של ערך גבוה וערך נמוך
+    const totalSys = measurements.reduce((sum, m) => sum + m.systolic, 0);
+    const totalDia = measurements.reduce((sum, m) => sum + m.diastolic, 0);
+    const avgSys = totalSys / measurements.length;
+    const avgDia = totalDia / measurements.length;
