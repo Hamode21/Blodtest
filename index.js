@@ -28,3 +28,7 @@ app.post('/bp/:userId', (req, res) => {
         res.status(400).json({ error: 'חייב לשלוח ערך גבוה ונמוך' }); // שולח שגיאה אם חסר
         return; 
     }
+// הופך את הערכים למספרים
+    const sys = Number(systolic); // ערך גבוה
+    const dia = Number(diastolic); // ערך נמוך
+    const pul = pulse ? Number(pulse) : null; // דופק (אם אין, שם null)
