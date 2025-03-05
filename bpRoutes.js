@@ -1,9 +1,6 @@
 const express = require('express');
 const router = express.Router();
 
-// מקום לשמירת הנתונים (בזיכרון לעת עתה)
-const bloodPressureData = {};
-
 // Middleware לבדיקת נתוני מדידה
 const validateMeasurement = (req, res, next) => {
     const { systolic, diastolic, pulse } = req.body;
@@ -21,7 +18,7 @@ const validateMeasurement = (req, res, next) => {
         return res.status(400).json({ error: 'הערכים לא הגיוניים' });
     }
 
-    req.validatedData = { sys, dia, pul }; // שומר את הנתונים המאומתים
+    req.validatedData = { sys, dia, pul };
     next();
 };
 
@@ -58,190 +55,216 @@ const validateMeasurement = (req, res, next) => {
  *       400:
  *         description: שגיאה בנתונים
  */
-router.post('/bp/:userId', validateMeasurement, (req, res) => {
-    const userId = req.params.userId;
-    const { sys, dia, pul } = req.validatedData;
-    const { date } = req.body;
+module.exports = (db) => { // מקבל את ה-db כפרמטר
+    router.post('/bp/:userId', validateMeasurement, (req, res) => {
+        const userId = req.params.userId;
+        const { sys, dia, pul } = req.validatedData;
+        const { date } = req.body;
 
-    if (!bloodPressureData[userId]) {
-        bloodPressureData[userId] = [];
-    }
-
-    const newMeasurement = {
-        systolic: sys,
-        diastolic: dia,
-        pulse: pul,
-        date: date || new Date().toISOString(),
-    };
-
-    bloodPressureData[userId].push(newMeasurement);
-
-    res.status(201).json({
-        message: 'המדידה נשמרה',
-        measurement: newMeasurement
-    });
-});
-
-/**
- * @swagger
- * /bp/{userId}:
- *   get:
- *     summary: קבלת כל המדידות של משתמש
- *     parameters:
- *       - in: path
- *         name: userId
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: רשימת המדידות
- *       404:
- *         description: אין נתונים
- */
-router.get('/bp/:userId', (req, res) => {
-    const userId = req.params.userId;
-
-    if (!bloodPressureData[userId]) {
-        res.status(404).json({ error: 'אין נתונים למשתמש הזה' });
-        return;
-    }
-
-    res.json({
-        userId: userId,
-        measurements: bloodPressureData[userId]
-    });
-});
-
-/**
- * @swagger
- * /history/{userId}:
- *   get:
- *     summary: קבלת היסטוריית מדידות עם הדגשות
- *     parameters:
- *       - in: path
- *         name: userId
- *         required: true
- *         schema:
- *           type: string
- *       - in: query
- *         name: startDate
- *         schema:
- *           type: string
- *           format: date
- *       - in: query
- *         name: endDate
- *         schema:
- *           type: string
- *           format: date
- *     responses:
- *       200:
- *         description: היסטוריה עם ממוצעים והדגשות
- *       404:
- *         description: אין נתונים
- */
-router.get('/history/:userId', (req, res) => {
-    const userId = req.params.userId;
-    const { startDate, endDate } = req.query;
-
-    if (!bloodPressureData[userId]) {
-        res.status(404).json({ error: 'אין נתונים למשתמש הזה' });
-        return;
-    }
-
-    let measurements = bloodPressureData[userId];
-
-    if (startDate && endDate) {
-        const start = new Date(startDate);
-        const end = new Date(endDate);
-        measurements = measurements.filter(m => {
-            const measurementDate = new Date(m.date);
-            return measurementDate >= start && measurementDate <= end;
-        });
-    }
-
-    const totalSys = measurements.reduce((sum, m) => sum + m.systolic, 0);
-    const totalDia = measurements.reduce((sum, m) => sum + m.diastolic, 0);
-    const avgSys = totalSys / measurements.length;
-    const avgDia = totalDia / measurements.length;
-
-    const highlightedMeasurements = measurements.map(m => {
-        const isSysHighlighted = Math.abs(m.systolic - avgSys) > avgSys * 0.2;
-        const isDiaHighlighted = Math.abs(m.diastolic - avgDia) > avgDia * 0.2;
-        return {
-            ...m,
-            highlight: isSysHighlighted || isDiaHighlighted
+        const newMeasurement = {
+            userId,
+            systolic: sys,
+            diastolic: dia,
+            pulse: pul,
+            date: date || new Date().toISOString(),
         };
+
+        db.run(
+            `INSERT INTO measurements (userId, systolic, diastolic, pulse, date) VALUES (?, ?, ?, ?, ?)`,
+            [userId, sys, dia, pul, newMeasurement.date],
+            function(err) {
+                if (err) {
+                    return res.status(500).json({ error: 'שגיאה בשמירה' });
+                }
+                res.status(201).json({
+                    message: 'המדידה נשמרה',
+                    measurement: newMeasurement
+                });
+            }
+        );
     });
 
-    res.json({
-        userId: userId,
-        averageSystolic: avgSys,
-        averageDiastolic: avgDia,
-        measurements: highlightedMeasurements
-    });
-});
+    /**
+     * @swagger
+     * /bp/{userId}:
+     *   get:
+     *     summary: קבלת כל המדידות של משתמש
+     *     parameters:
+     *       - in: path
+     *         name: userId
+     *         required: true
+     *         schema:
+     *           type: string
+     *     responses:
+     *       200:
+     *         description: רשימת המדידות
+     *       404:
+     *         description: אין נתונים
+     */
+    router.get('/bp/:userId', (req, res) => {
+        const userId = req.params.userId;
 
-/**
- * @swagger
- * /users-summary:
- *   get:
- *     summary: סיכום מדידות לכל המשתמשים בחודש נתון
- *     parameters:
- *       - in: query
- *         name: month
- *         required: true
- *         schema:
- *           type: string
- *           format: date
- *           example: 2023-11
- *     responses:
- *       200:
- *         description: סיכום לכל המשתמשים
- *       400:
- *         description: חסר חודש
- */
-router.get('/users-summary', (req, res) => {
-    const { month } = req.query;
-
-    if (!month) {
-        res.status(400).json({ error: 'חייב לשלוח חודש' });
-        return;
-    }
-
-    const [year, monthNum] = month.split('-');
-    const start = new Date(year, monthNum - 1, 1);
-    const end = new Date(year, monthNum, 0);
-
-    const summary = Object.keys(bloodPressureData).map(userId => {
-        const measurements = bloodPressureData[userId].filter(m => {
-            const date = new Date(m.date);
-            return date >= start && date <= end;
+        db.all(`SELECT * FROM measurements WHERE userId = ?`, [userId], (err, rows) => {
+            if (err) {
+                return res.status(500).json({ error: 'שגיאה בקריאה' });
+            }
+            if (rows.length === 0) {
+                return res.status(404).json({ error: 'אין נתונים למשתמש הזה' });
+            }
+            res.json({
+                userId: userId,
+                measurements: rows
+            });
         });
+    });
 
-        if (measurements.length === 0) {
-            return { userId, averageSystolic: 0, averageDiastolic: 0, outliers: 0 };
+    /**
+     * @swagger
+     * /history/{userId}:
+     *   get:
+     *     summary: קבלת היסטוריית מדידות עם הדגשות
+     *     parameters:
+     *       - in: path
+     *         name: userId
+     *         required: true
+     *         schema:
+     *           type: string
+     *       - in: query
+     *         name: startDate
+     *         schema:
+     *           type: string
+     *           format: date
+     *       - in: query
+     *         name: endDate
+     *         schema:
+     *           type: string
+     *           format: date
+     *     responses:
+     *       200:
+     *         description: היסטוריה עם ממוצעים והדגשות
+     *       404:
+     *         description: אין נתונים
+     */
+    router.get('/history/:userId', (req, res) => {
+        const userId = req.params.userId;
+        const { startDate, endDate } = req.query;
+
+        let query = `SELECT * FROM measurements WHERE userId = ?`;
+        let params = [userId];
+
+        if (startDate && endDate) {
+            query += ` AND date >= ? AND date <= ?`;
+            params.push(startDate, endDate);
         }
 
-        const totalSys = measurements.reduce((sum, m) => sum + m.systolic, 0);
-        const totalDia = measurements.reduce((sum, m) => sum + m.diastolic, 0);
-        const avgSys = totalSys / measurements.length;
-        const avgDia = totalDia / measurements.length;
+        db.all(query, params, (err, rows) => {
+            if (err) {
+                return res.status(500).json({ error: 'שגיאה בקריאה' });
+            }
+            if (rows.length === 0) {
+                return res.status(404).json({ error: 'אין נתונים למשתמש הזה' });
+            }
 
-        const outliers = measurements.filter(m =>
-            Math.abs(m.systolic - avgSys) > avgSys * 0.2 ||
-            Math.abs(m.diastolic - avgDia) > avgDia * 0.2
-        ).length;
+            const totalSys = rows.reduce((sum, m) => sum + m.systolic, 0);
+            const totalDia = rows.reduce((sum, m) => sum + m.diastolic, 0);
+            const avgSys = totalSys / rows.length;
+            const avgDia = totalDia / rows.length;
 
-        return {
-            userId,
-            averageSystolic: avgSys,
-            averageDiastolic: avgDia,
-            outliers
-        };
+            const highlightedMeasurements = rows.map(m => {
+                const isSysHighlighted = Math.abs(m.systolic - avgSys) > avgSys * 0.2;
+                const isDiaHighlighted = Math.abs(m.diastolic - avgDia) > avgDia * 0.2;
+                return {
+                    ...m,
+                    highlight: isSysHighlighted || isDiaHighlighted
+                };
+            });
+
+            res.json({
+                userId: userId,
+                averageSystolic: avgSys,
+                averageDiastolic: avgDia,
+                measurements: highlightedMeasurements
+            });
+        });
     });
 
-    res.json({ month, summary });
-});
+    /**
+     * @swagger
+     * /users-summary:
+     *   get:
+     *     summary: סיכום מדידות לכל המשתמשים בחודש נתון
+     *     parameters:
+     *       - in: query
+     *         name: month
+     *         required: true
+     *         schema:
+     *           type: string
+     *           format: date
+     *           example: 2023-11
+     *     responses:
+     *       200:
+     *         description: סיכום לכל המשתמשים
+     *       400:
+     *         description: חסר חודש
+     */
+    router.get('/users-summary', (req, res) => {
+        const { month } = req.query;
 
-module.exports = router;
+        if (!month) {
+            res.status(400).json({ error: 'חייב לשלוח חודש' });
+            return;
+        }
+
+        const [year, monthNum] = month.split('-');
+        const start = new Date(year, monthNum - 1, 1).toISOString().split('T')[0];
+        const end = new Date(year, monthNum, 0).toISOString().split('T')[0];
+
+        db.all(`SELECT DISTINCT userId FROM measurements`, [], (err, users) => {
+            if (err) {
+                return res.status(500).json({ error: 'שגיאה בקריאה' });
+            }
+
+            const summary = users.map(user => {
+                return new Promise((resolve) => {
+                    db.all(
+                        `SELECT * FROM measurements WHERE userId = ? AND date >= ? AND date <= ?`,
+                        [user.userId, start, end],
+                        (err, measurements) => {
+                            if (err) {
+                                resolve({ userId: user.userId, error: 'שגיאה בקריאה' });
+                                return;
+                            }
+                            if (measurements.length === 0) {
+                                resolve({ userId: user.userId, averageSystolic: 0, averageDiastolic: 0, outliers: 0 });
+                                return;
+                            }
+
+                            const totalSys = measurements.reduce((sum, m) => sum + m.systolic, 0);
+                            const totalDia = measurements.reduce((sum, m) => sum + m.diastolic, 0);
+                            const avgSys = totalSys / measurements.length;
+                            const avgDia = totalDia / measurements.length;
+
+                            const outliers = measurements.filter(m =>
+                                Math.abs(m.systolic - avgSys) > avgSys * 0.2 ||
+                                Math.abs(m.diastolic - avgDia) > avgDia * 0.2
+                            ).length;
+
+                            resolve({
+                                userId: user.userId,
+                                averageSystolic: avgSys,
+                                averageDiastolic: avgDia,
+                                outliers
+                            });
+                        }
+                    );
+                });
+            });
+
+            Promise.all(summary).then(results => {
+                res.json({ month, summary: results });
+            });
+        });
+    });
+
+    return router;
+};
