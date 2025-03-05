@@ -82,3 +82,8 @@ app.get('/bp/:userId', (req, res) => {
     });
 });
 
+//מפעילים את השרת
+app.listen(port, () => {
+    // השרת מתחיל לעבוד ומקשיב ב-port 3000
+    console.log(`השרת עובד ב-http://localhost:${port}`); // מדפיס הודעה בטרמינל
+});
