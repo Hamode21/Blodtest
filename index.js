@@ -27,7 +27,7 @@ app.post('/bp/:userId', (req, res) => {
     if (!systolic || !diastolic) {
         res.status(400).json({ error: 'חייב לשלוח ערך גבוה ונמוך' }); // שולח שגיאה אם חסר
         return; 
-    }
+    });
 // הופך את הערכים למספרים
     const sys = Number(systolic); // ערך גבוה
     const dia = Number(diastolic); // ערך נמוך
@@ -37,3 +37,11 @@ app.post('/bp/:userId', (req, res) => {
     if (isNaN(sys) || isNaN(dia) || (pul !== null && isNaN(pul))) {
         res.status(400).json({ error: 'הערכים חייבים להיות מספרים' }); 
         return;
+
+        }
+
+    // בודק אם הערכים הגיוניים
+    if (sys < 50 || sys > 250 || dia < 30 || dia > 150) {
+        res.status(400).json({ error: 'הערכים לא הגיוניים' }); 
+        return;
+    }
