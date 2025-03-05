@@ -49,3 +49,9 @@
 
          form.addEventListener('submit', function(event) {
             event.preventDefault();
+
+            // לוקח את הערכים מהטופס
+            let user = document.getElementById('userId').value; // המשתמש שבחרנו
+            let systolic = document.querySelector('[name="systolic"]').value; // ערך גבוה
+            let diastolic = document.querySelector('[name="diastolic"]').value; // ערך נמוך
+            let pulse = document.querySelector('[name="pulse"]').value; // דופק
