@@ -12,12 +12,59 @@ app.use(express.static(path.join(__dirname, 'public')));
 //מקום לשמור את הנתונים
 const bloodPressureData = {};
 
-//כניסה לדף
+// הגדרת Swagger
+const swaggerOptions = {
+    definition: {
+        openapi: '3.0.0',
+        info: {
+            title: 'Blood Pressure API',
+            version: '1.0.0',
+            description: 'API לניהול מדידות לחץ דם',
+        },
+        servers: [{ url: `http://localhost:${port}` }],
+    },
+    apis: ['index.js'], // הקובץ שבו נשים את התיעוד
+};
+const swaggerDocs = swaggerJsdoc(swaggerOptions);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+
 app.get('/', (req, res) => {
-    // כניסה ל לוקאל הוסט
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
-    return; 
-}); 
+});
+
+/**
+ * @swagger
+ * /bp/{userId}:
+ *   post:
+ *     summary: הוספת מדידת לחץ דם חדשה
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               systolic:
+ *                 type: number
+ *               diastolic:
+ *                 type: number
+ *               pulse:
+ *                 type: number
+ *               date:
+ *                 type: string
+ *                 format: date-time
+ *     responses:
+ *       201:
+ *         description: המדידה נשמרה
+ *       400:
+ *         description: שגיאה בנתונים
+ */
 
 //שמירת מדידה חדשה
 app.post('/bp/:userId', (req, res) => {
