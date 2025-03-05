@@ -1,84 +1,87 @@
 <!DOCTYPE html>
-
-
 <html>
 <head>
-   
-    <title>לחץ דם</title>
+    <title>היסטוריית לחץ דם</title>
     <meta charset="UTF-8">
-    <!-- עיצוב פשוט לדף -->
     <style>
-        body { text-align: center; margin-top: 20px; } 
+        body { text-align: center; margin-top: 20px; }
         form { text-align: right; }
-        input { margin: 5px; } 
-        select { margin: 5px; } 
+        input, select { margin: 5px; }
+        table { margin: 20px auto; border-collapse: collapse; }
+        th, td { border: 1px solid black; padding: 5px; }
+        .highlight { background-color: yellow; } <!-- הדגשה בצהוב -->
     </style>
 </head>
+<body>
+    <h1>היסטוריית מדידות</h1>
 
-   <body>
-   
-    <h1>שמירת לחץ דם</h1>
-
-    <form id="myForm">
-    <label>מי המשתמש:</label>
-       <select id="userId">
+    <!-- טופס לבחירת משתמש ותאריכים -->
+    <form id="historyForm">
+        <label>מי המשתמש:</label>
+        <select id="userId">
             <option value="user1">משתמש 1</option>
-            <option value="user2">משתמש 2</option> 
+            <option value="user2">משתמש 2</option>
             <option value="user3">משתמש 3</option>
         </select>
-        <br> 
-       <label>ערך גבוה:</label>
-        <input type="number" name="systolic" required> 
-        <br> 
-
-       <label>ערך נמוך:</label>
-        <input type="number" name="diastolic" required> 
-        <br> 
-
-       <label>דופק:</label>
-        <input type="number" name="pulse">
-        <br> 
-<button type="submit">שמור</button>
+        <br>
+        <label>מתאריך:</label>
+        <input type="date" name="startDate">
+        <br>
+        <label>עד תאריך:</label>
+        <input type="date" name="endDate">
+        <br>
+        <button type="submit">הצג</button>
     </form>
 
-      <p id="message"></p>
+    <!-- מקום להראות את התוצאות -->
+    <div id="results"></div>
 
-      <script>
-        // לוקח את הטופס לפי ה-id שלו
-        let form = document.getElementById('myForm');
+    <script>
+        let form = document.getElementById('historyForm');
 
-         form.addEventListener('submit', function(event) {
+        form.addEventListener('submit', function(event) {
             event.preventDefault();
 
-            // לוקח את הערכים מהטופס
-            let user = document.getElementById('userId').value; // המשתמש שבחרנו
-            let systolic = document.querySelector('[name="systolic"]').value; // ערך גבוה
-            let diastolic = document.querySelector('[name="diastolic"]').value; // ערך נמוך
-            let pulse = document.querySelector('[name="pulse"]').value; // דופק
+            let user = document.getElementById('userId').value;
+            let startDate = document.querySelector('[name="startDate"]').value;
+            let endDate = document.querySelector('[name="endDate"]').value;
 
-            // שולח את הנתונים לשרת
-            fetch('/bp/' + user, {
-                method: 'POST', 
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    systolic: systolic, 
-                    diastolic: diastolic, 
-                    pulse: pulse 
-       })
+            // יוצר את הכתובת עם התאריכים
+            let url = '/history/' + user;
+            if (startDate && endDate) {
+                url += '?startDate=' + startDate + '&endDate=' + endDate;
+            }
+
+            fetch(url)
+            .then(function(response) {
+                return response.json();
             })
-            .then(function(response) { 
-                return response.json(); 
-            })
-            .then(function(data) { 
-                if (data.error) { 
-                    document.getElementById('message').textContent = data.error;
-                } else { 
-                    document.getElementById('message').textContent = 'נשמר!';
-                    form.reset(); 
+            .then(function(data) {
+                if (data.error) {
+                    document.getElementById('results').innerHTML = data.error;
+                } else {
+                    // יוצר טבלה להצגת הנתונים
+                    let html = '<p>ממוצע ערך גבוה: ' + data.averageSystolic.toFixed(2) + '</p>';
+                    html += '<p>ממוצע ערך נמוך: ' + data.averageDiastolic.toFixed(2) + '</p>';
+                    html += '<table>';
+                    html += '<tr><th>תאריך</th><th>ערך גבוה</th><th>ערך נמוך</th><th>דופק</th></tr>';
+                    
+                    data.measurements.forEach(m => {
+                        let rowClass = m.highlight ? ' class="highlight"' : '';
+                        html += '<tr' + rowClass + '>';
+                        html += '<td>' + new Date(m.date).toLocaleString() + '</td>';
+                        html += '<td>' + m.systolic + '</td>';
+                        html += '<td>' + m.diastolic + '</td>';
+                        html += '<td>' + (m.pulse || '-') + '</td>';
+                        html += '</tr>';
+                    });
+                    
+                    html += '</table>';
+                    document.getElementById('results').innerHTML = html;
                 }
             })
-            .catch(function() { 
-               document.getElementById('message').textContent = 'יש בעיה!';
+            .catch(function() {
+                document.getElementById('results').innerHTML = 'יש בעיה!';
             });
         });
     </script>
