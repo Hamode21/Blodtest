@@ -81,3 +81,16 @@
         let addForm = document.getElementById('addForm');
         addForm.addEventListener('submit', function(event) {
             event.preventDefault();
+            let user = document.getElementById('addUserId').value;
+            let systolic = document.querySelector('#addForm [name="systolic"]').value;
+            let diastolic = document.querySelector('#addForm [name="diastolic"]').value;
+            let pulse = document.querySelector('#addForm [name="pulse"]').value;
+
+            fetch('/api/bp/' + user, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    systolic: systolic,
+                    diastolic: diastolic,
+                    pulse: pulse
+                })
