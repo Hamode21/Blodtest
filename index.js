@@ -78,3 +78,5 @@ app.get('/history/:userId', (req, res) => {
         res.status(404).json({ error: 'אין נתונים למשתמש הזה' });
         return;
     }
+// לוקח את כל המדידות של המשתמש
+    let measurements = bloodPressureData[userId];
