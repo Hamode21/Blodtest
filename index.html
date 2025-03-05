@@ -55,3 +55,13 @@
             let systolic = document.querySelector('[name="systolic"]').value; // ערך גבוה
             let diastolic = document.querySelector('[name="diastolic"]').value; // ערך נמוך
             let pulse = document.querySelector('[name="pulse"]').value; // דופק
+
+            // שולח את הנתונים לשרת
+            fetch('/bp/' + user, {
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    systolic: systolic, 
+                    diastolic: diastolic, 
+                    pulse: pulse 
+                })
