@@ -59,3 +59,11 @@ app.post('/bp/:userId', (req, res) => {
     };
 // שומר את המדידה ברשימה של המשתמש
     bloodPressureData[userId].push(newMeasurement);
+// שולח תגובה שהכל בסדר
+    res.status(201).json({
+        message: 'המדידה נשמרה',
+        measurement: newMeasurement
+            });
+});
+
+
