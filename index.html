@@ -93,4 +93,18 @@
                     systolic: systolic,
                     diastolic: diastolic,
                     pulse: pulse
-                })
+            
+                    })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    document.getElementById('addMessage').textContent = data.error;
+                } else {
+                    document.getElementById('addMessage').textContent = 'נשמר!';
+                    addForm.reset();
+                }
+            })
+            .catch(() => {
+                document.getElementById('addMessage').textContent = 'יש בעיה!';
+            });
