@@ -57,3 +57,5 @@ app.post('/bp/:userId', (req, res) => {
         pulse: pul, // דופק
         date: date || new Date().toISOString(),
     };
+// שומר את המדידה ברשימה של המשתמש
+    bloodPressureData[userId].push(newMeasurement);
