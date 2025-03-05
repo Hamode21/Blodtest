@@ -32,3 +32,8 @@ app.post('/bp/:userId', (req, res) => {
     const sys = Number(systolic); // ערך גבוה
     const dia = Number(diastolic); // ערך נמוך
     const pul = pulse ? Number(pulse) : null; // דופק (אם אין, שם null)
+
+         // בודק תקינות הערכים
+    if (isNaN(sys) || isNaN(dia) || (pul !== null && isNaN(pul))) {
+        res.status(400).json({ error: 'הערכים חייבים להיות מספרים' }); 
+        return;
