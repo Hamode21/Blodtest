@@ -70,3 +70,9 @@ app.post('/bp/:userId', (req, res) => {
 app.get('/bp/:userId', (req, res) => {
     const userId = req.params.userId;
 
+    // בודק אם אין נתונים למשתמש הזה
+    if (!bloodPressureData[userId]) {
+        res.status(404).json({ error: 'אין נתונים למשתמש הזה' }); // שגיאה אם אין כלום
+        return; 
+    }
+
