@@ -108,12 +108,12 @@
             .catch(() => {
                 document.getElementById('addMessage').textContent = 'יש בעיה!';
             });
-
-                                // טופס היסטוריה
+// טופס היסטוריה
         let historyForm = document.getElementById('historyForm');
         historyForm.addEventListener('submit', function(event) {
             event.preventDefault();
-let user = document.getElementById('historyUserId').value;
+
+            let user = document.getElementById('historyUserId').value;
             let startDate = document.querySelector('#historyForm [name="startDate"]').value;
             let endDate = document.querySelector('#historyForm [name="endDate"]').value;
 
@@ -121,3 +121,33 @@ let user = document.getElementById('historyUserId').value;
             if (startDate && endDate) {
                 url += '?startDate=' + startDate + '&endDate=' + endDate;
             }
+
+            fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    document.getElementById('historyResults').innerHTML = data.error;
+                } else {
+                    let html = '<p>ממוצע ערך גבוה: ' + data.averageSystolic.toFixed(2) + '</p>';
+                    html += '<p>ממוצע ערך נמוך: ' + data.averageDiastolic.toFixed(2) + '</p>';
+                    html += '<table>';
+                    html += '<tr><th>תאריך</th><th>ערך גבוה</th><th>ערך נמוך</th><th>דופק</th></tr>';
+                    
+                    data.measurements.forEach(m => {
+                        let rowClass = m.highlight ? ' class="highlight"' : '';
+                        html += '<tr' + rowClass + '>';
+                        html += '<td>' + new Date(m.date).toLocaleString() + '</td>';
+                        html += '<td>' + m.systolic + '</td>';
+                        html += '<td>' + m.diastolic + '</td>';
+                        html += '<td>' + (m.pulse || '-') + '</td>';
+                        html += '</tr>';
+                    });
+                    
+                    html += '</table>';
+                    document.getElementById('historyResults').innerHTML = html;
+                }
+            })
+            .catch(() => {
+                document.getElementById('historyResults').innerHTML = 'יש בעיה!';
+            });
+        });
