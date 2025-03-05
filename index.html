@@ -108,3 +108,8 @@
             .catch(() => {
                 document.getElementById('addMessage').textContent = 'יש בעיה!';
             });
+
+                                // טופס היסטוריה
+        let historyForm = document.getElementById('historyForm');
+        historyForm.addEventListener('submit', function(event) {
+            event.preventDefault();
