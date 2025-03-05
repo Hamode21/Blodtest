@@ -40,3 +40,25 @@
         </form>
         <p id="addMessage"></p>
     </section>
+
+    <!-- טופס להצגת היסטוריה -->
+    <section>
+        <h2>היסטוריית מדידות</h2>
+        <form id="historyForm">
+            <label>מי המשתמש:</label>
+            <select id="historyUserId">
+                <option value="user1">משתמש 1</option>
+                <option value="user2">משתמש 2</option>
+                <option value="user3">משתמש 3</option>
+            </select>
+            <br>
+            <label>מתאריך:</label>
+            <input type="date" name="startDate">
+            <br>
+            <label>עד תאריך:</label>
+            <input type="date" name="endDate">
+            <br>
+            <button type="submit">הצג</button>
+        </form>
+        <div id="historyResults"></div>
+    </section>
