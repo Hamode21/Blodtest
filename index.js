@@ -75,4 +75,10 @@ app.get('/bp/:userId', (req, res) => {
         res.status(404).json({ error: 'אין נתונים למשתמש הזה' }); // שגיאה אם אין כלום
         return; 
     }
+    // שולח את כל המדידות של המשתמש
+    res.json({
+        userId: userId, // שם המשתמש
+        measurements: bloodPressureData[userId] // הרשימה של המדידות
+    });
+});
 
