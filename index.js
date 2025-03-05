@@ -117,6 +117,23 @@ app.post('/bp/:userId', (req, res) => {
         measurement: newMeasurement
     });
 });
+/**
+ * @swagger
+ * /bp/{userId}:
+ *   get:
+ *     summary: קבלת כל המדידות של משתמש
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: רשימת המדידות
+ *       404:
+ *         description: אין נתונים
+ */
 
 // הצגת היסטוריה עם תאריכים והדגשות
 app.get('/history/:userId', (req, res) => {
