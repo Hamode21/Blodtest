@@ -113,3 +113,11 @@
         let historyForm = document.getElementById('historyForm');
         historyForm.addEventListener('submit', function(event) {
             event.preventDefault();
+let user = document.getElementById('historyUserId').value;
+            let startDate = document.querySelector('#historyForm [name="startDate"]').value;
+            let endDate = document.querySelector('#historyForm [name="endDate"]').value;
+
+            let url = '/api/history/' + user;
+            if (startDate && endDate) {
+                url += '?startDate=' + startDate + '&endDate=' + endDate;
+            }
