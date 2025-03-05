@@ -95,3 +95,24 @@ app.get('/history/:userId', (req, res) => {
     const totalDia = measurements.reduce((sum, m) => sum + m.diastolic, 0);
     const avgSys = totalSys / measurements.length;
     const avgDia = totalDia / measurements.length;
+// מוסיף סימון למדידות שחרגו ב-20% מהממוצע
+    const highlightedMeasurements = measurements.map(m => {
+        const isSysHighlighted = Math.abs(m.systolic - avgSys) > avgSys * 0.2; // חורג ב-20% מהממוצע של הגבוה
+        const isDiaHighlighted = Math.abs(m.diastolic - avgDia) > avgDia * 0.2; // חורג ב-20% מהממוצע של הנמוך
+        return {
+            ...m,
+            highlight: isSysHighlighted || isDiaHighlighted // מסמן אם צריך הדגשה
+        };
+    });
+
+    res.json({
+        userId: userId,
+        averageSystolic: avgSys,
+        averageDiastolic: avgDia,
+        measurements: highlightedMeasurements
+    });
+});
+
+app.listen(port, () => {
+    console.log(`השרת עובד ב-http://localhost:${port}`);
+});
