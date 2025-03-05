@@ -45,3 +45,8 @@ app.post('/bp/:userId', (req, res) => {
         res.status(400).json({ error: 'הערכים לא הגיוניים' }); 
         return;
     }
+
+// בודק אם למשתמש אין עדיין נתונים
+    if (!bloodPressureData[userId]) {
+        bloodPressureData[userId] = []; // יוצר רשימה ריקה למשתמש
+    }
