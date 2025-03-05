@@ -50,3 +50,10 @@ app.post('/bp/:userId', (req, res) => {
     if (!bloodPressureData[userId]) {
         bloodPressureData[userId] = []; // יוצר רשימה ריקה למשתמש
     }
+// יוצר אובייקט עם המדידה החדשה
+    const newMeasurement = {
+        systolic: sys, // ערך גבוה
+        diastolic: dia, // ערך נמוך
+        pulse: pul, // דופק
+        date: date || new Date().toISOString(),
+    };
