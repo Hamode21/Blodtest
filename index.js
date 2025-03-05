@@ -201,7 +201,7 @@ app.get('/history/:userId', (req, res) => {
         return {
             ...m,
             highlight: isSysHighlighted || isDiaHighlighted // מסמן אם צריך הדגשה
-        };
+};
     });
 
     res.json({
@@ -210,6 +210,68 @@ app.get('/history/:userId', (req, res) => {
         averageDiastolic: avgDia,
         measurements: highlightedMeasurements
     });
+});
+
+/**
+ * @swagger
+ * /users-summary:
+ *   get:
+ *     summary: סיכום מדידות לכל המשתמשים בחודש נתון
+ *     parameters:
+ *       - in: query
+ *         name: month
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: date
+ *           example: 2023-11
+ *     responses:
+ *       200:
+ *         description: סיכום לכל המשתמשים
+ *       400:
+ *         description: חסר חודש
+ */
+app.get('/users-summary', (req, res) => {
+    const { month } = req.query; // מצפה לפורמט כמו '2023-11'
+
+    if (!month) {
+        res.status(400).json({ error: 'חייב לשלוח חודש' });
+        return;
+    }
+
+    const [year, monthNum] = month.split('-');
+    const start = new Date(year, monthNum - 1, 1); // תחילת החודש
+    const end = new Date(year, monthNum, 0);       // סוף החודש
+
+    const summary = Object.keys(bloodPressureData).map(userId => {
+        const measurements = bloodPressureData[userId].filter(m => {
+            const date = new Date(m.date);
+            return date >= start && date <= end;
+        });
+
+        if (measurements.length === 0) {
+            return { userId, averageSystolic: 0, averageDiastolic: 0, outliers: 0 };
+        }
+
+        const totalSys = measurements.reduce((sum, m) => sum + m.systolic, 0);
+        const totalDia = measurements.reduce((sum, m) => sum + m.diastolic, 0);
+        const avgSys = totalSys / measurements.length;
+        const avgDia = totalDia / measurements.length;
+
+        const outliers = measurements.filter(m =>
+            Math.abs(m.systolic - avgSys) > avgSys * 0.2 ||
+            Math.abs(m.diastolic - avgDia) > avgDia * 0.2
+        ).length;
+
+        return {
+            userId,
+            averageSystolic: avgSys,
+            averageDiastolic: avgDia,
+            outliers
+        };
+    });
+
+    res.json({ month, summary });
 });
 
 app.listen(port, () => {
