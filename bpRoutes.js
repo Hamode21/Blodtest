@@ -234,52 +234,24 @@ try {
         const start = new Date(year, monthNum - 1, 1).toISOString().split('T')[0];
         const end = new Date(year, monthNum, 0).toISOString().split('T')[0];
 
-        db.all(`SELECT DISTINCT userId FROM measurements`, [], (err, users) => {
-            if (err) {
-                return res.status(500).json({ error: 'שגיאה בקריאה' });
-            }
-
-            const summary = users.map(user => {
-                return new Promise((resolve) => {
-                    db.all(
-                        `SELECT * FROM measurements WHERE userId = ? AND date >= ? AND date <= ?`,
-                        [user.userId, start, end],
-                        (err, measurements) => {
-                            if (err) {
-                                resolve({ userId: user.userId, error: 'שגיאה בקריאה' });
-                                return;
-                            }
-                            if (measurements.length === 0) {
-                                resolve({ userId: user.userId, averageSystolic: 0, averageDiastolic: 0, outliers: 0 });
-                                return;
-                            }
-
-                            const totalSys = measurements.reduce((sum, m) => sum + m.systolic, 0);
-                            const totalDia = measurements.reduce((sum, m) => sum + m.diastolic, 0);
-                            const avgSys = totalSys / measurements.length;
-                            const avgDia = totalDia / measurements.length;
-
-                            const outliers = measurements.filter(m =>
-                                Math.abs(m.systolic - avgSys) > avgSys * 0.2 ||
-                                Math.abs(m.diastolic - avgDia) > avgDia * 0.2
-                            ).length;
-
-                            resolve({
-                                userId: user.userId,
-                                averageSystolic: avgSys,
-                                averageDiastolic: avgDia,
-                                outliers
-                            });
-                        }
-                    );
-                });
-            });
-
-            Promise.all(summary).then(results => {
-                res.json({ month, summary: results });
-            });
-        });
-    });
-
+       
     return router;
 };
+try {
+    const pool = await sql.connect();
+    const usersResult = await pool.request().query('SELECT DISTINCT userId FROM measurements');
+    const users = usersResult.recordset;
+
+    const summaryPromises = users.map(async (user) => {
+        const result = await pool.request()
+            .input('userId', sql.NVarChar, user.userId)
+            .input('start', sql.DateTime, start)
+            .input('end', sql.DateTime, end)
+            .query('SELECT * FROM measurements WHERE userId = @userId AND date >= @start AND date <= @end');
+        const measurements = result.recordset;
+        // חישוב ממוצעים וחריגות...
+    });
+
+    const summary = await Promise.all(summaryPromises);
+    res.json({ month, summary });
+} catch (err) { ... }
