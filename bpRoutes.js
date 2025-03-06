@@ -22,6 +22,7 @@ const validateMeasurement = (req, res, next) => {
     req.validatedData = { sys, dia, pul };
     next();
 };
+
 /**
  * @swagger
  * /bp/{userId}:
@@ -86,7 +87,7 @@ module.exports = (sql) => { // שינוי מ-db ל-sql
             console.error(err);
             res.status(500).json({ error: 'שגיאה בשמירה' });
         }
-}); // סגירת ה-POST
+    }); 
 
     /**
      * @swagger
@@ -105,7 +106,7 @@ module.exports = (sql) => { // שינוי מ-db ל-sql
      *       404:
      *         description: אין נתונים
      */
-    router.get('/bp/:userId', async (req, res) => { // הוספת async
+    router.get('/bp/:userId', async (req, res) => { 
         const userId = req.params.userId;
 
         try {
@@ -125,7 +126,8 @@ module.exports = (sql) => { // שינוי מ-db ל-sql
             res.status(500).json({ error: 'שגיאה בקריאה' });
         }
     });
-/**
+
+    /**
      * @swagger
      * /history/{userId}:
      *   get:
@@ -152,15 +154,14 @@ module.exports = (sql) => { // שינוי מ-db ל-sql
      *       404:
      *         description: אין נתונים
      */
-    router.get('/history/:userId', async (req, res) => { // הוספת async
+    router.get('/history/:userId', async (req, res) => { 
         const userId = req.params.userId;
         const { startDate, endDate } = req.query;
 
-        let query = `SELECT * FROM measurements WHERE userId = @userId`; // שינוי מ-? ל-@userId
-        // הסרנו את params כי mssql משתמש ב-.input
+        let query = `SELECT * FROM measurements WHERE userId = @userId`; 
 
         if (startDate && endDate) {
-            query += ` AND date >= @startDate AND date <= @endDate`; // שינוי ל-@ במקום ?
+            query += ` AND date >= @startDate AND date <= @endDate`; 
         }
 
         try {
@@ -173,9 +174,9 @@ module.exports = (sql) => { // שינוי מ-db ל-sql
             if (result.recordset.length === 0) {
                 return res.status(404).json({ error: 'אין נתונים למשתמש הזה' });
             }
-            const measurements = result.recordset; // שינוי מ-rows ל-result.recordset
+            const measurements = result.recordset; 
 
-            const totalSys = measurements.reduce((sum, m) => sum + m.systolic, 0); // שינוי מ-rows ל-measurements
+            const totalSys = measurements.reduce((sum, m) => sum + m.systolic, 0); 
             const totalDia = measurements.reduce((sum, m) => sum + m.diastolic, 0);
             const avgSys = totalSys / measurements.length;
             const avgDia = totalDia / measurements.length;
@@ -275,4 +276,5 @@ module.exports = (sql) => { // שינוי מ-db ל-sql
         }
     });
 
-    return router;
+    return router; 
+};
