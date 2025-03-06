@@ -86,3 +86,42 @@ module.exports = (sql) => { // שינוי מ-db ל-sql
             console.error(err);
             res.status(500).json({ error: 'שגיאה בשמירה' });
         }
+}); // סגירת ה-POST
+
+    /**
+     * @swagger
+     * /bp/{userId}:
+     *   get:
+     *     summary: קבלת כל המדידות של משתמש
+     *     parameters:
+     *       - in: path
+     *         name: userId
+     *         required: true
+     *         schema:
+     *           type: string
+     *     responses:
+     *       200:
+     *         description: רשימת המדידות
+     *       404:
+     *         description: אין נתונים
+     */
+    router.get('/bp/:userId', async (req, res) => { // הוספת async
+        const userId = req.params.userId;
+
+        try {
+            const pool = await sql.connect();
+            const result = await pool.request()
+                .input('userId', sql.NVarChar, userId)
+                .query('SELECT * FROM measurements WHERE userId = @userId');
+            if (result.recordset.length === 0) {
+                return res.status(404).json({ error: 'אין נתונים למשתמש הזה' });
+            }
+            res.json({
+                userId: userId,
+                measurements: result.recordset
+            });
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ error: 'שגיאה בקריאה' });
+        }
+    });
