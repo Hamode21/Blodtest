@@ -107,18 +107,22 @@ try {
     router.get('/bp/:userId', (req, res) => {
         const userId = req.params.userId;
 
-        db.all(`SELECT * FROM measurements WHERE userId = ?`, [userId], (err, rows) => {
-            if (err) {
-                return res.status(500).json({ error: 'שגיאה בקריאה' });
-            }
-            if (rows.length === 0) {
-                return res.status(404).json({ error: 'אין נתונים למשתמש הזה' });
-            }
-            res.json({
-                userId: userId,
-                measurements: rows
-            });
-        });
+try {
+    const pool = await sql.connect();
+    const result = await pool.request()
+        .input('userId', sql.NVarChar, userId)
+        .query('SELECT * FROM measurements WHERE userId = @userId');
+    if (result.recordset.length === 0) {
+        return res.status(404).json({ error: 'אין נתונים למשתמש הזה' });
+    }
+    res.json({
+        userId: userId,
+        measurements: result.recordset
+    });
+} catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'שגיאה בקריאה' });
+}
     });
 
     /**
