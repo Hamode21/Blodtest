@@ -8,17 +8,25 @@ const sqlite3 = require('sqlite3').verbose(); // חדש - SQLite
 const app = express();
 const port = 3000;
 
-// הגדרת חיבור ל-SQL Server
+// הגדרת חיבור ל-SQL Server עם Windows Authentication
 const dbConfig = {
-    user: 'sa', // שנה לשם המשתמש שלך 
-    password: 'your_password', // שנה לסיסמה שלך
-    server: 'localhost', 
-    database: 'BloodPressureDB', 
+    server: 'localhost', // שנה לשם השרת שלך 
+    database: 'BloodPressureDB', // בסיס הנתונים שלך
     options: {
         encrypt: false, 
-        trustServerCertificate: true 
+        trustServerCertificate: true // לשרת מקומי ב-Windows
+    },
+    authentication: {
+        type: 'ntlm', // Windows Authentication
+        options: {
+            domain: '' 
+        }
+    },
+    pool: {
+        max: 10,
+        min: 0,
+        idleTimeoutMillis: 30000
     }
-};
 
 // חיבור ל-SQL Server
 sql.connect(dbConfig).then(pool => {
