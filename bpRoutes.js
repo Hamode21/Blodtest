@@ -200,3 +200,79 @@ module.exports = (sql) => { // שינוי מ-db ל-sql
             res.status(500).json({ error: 'שגיאה בקריאה' });
         }
     });
+
+    /**
+     * @swagger
+     * /users-summary:
+     *   get:
+     *     summary: סיכום מדידות לכל המשתמשים בחודש נתון
+     *     parameters:
+     *       - in: query
+     *         name: month
+     *         required: true
+     *         schema:
+     *           type: string
+     *           format: date
+     *           example: 2023-11
+     *     responses:
+     *       200:
+     *         description: סיכום לכל המשתמשים
+     *       400:
+     *         description: חסר חודש
+     */
+    router.get('/users-summary', async (req, res) => { // הוספת async
+        const { month } = req.query;
+
+        if (!month) {
+            res.status(400).json({ error: 'חייב לשלוח חודש' });
+            return;
+        }
+
+        const [year, monthNum] = month.split('-');
+        const start = new Date(year, monthNum - 1, 1);
+        const end = new Date(year, monthNum, 0);
+
+        try {
+            const pool = await sql.connect();
+            const usersResult = await pool.request().query('SELECT DISTINCT userId FROM measurements');
+            const users = usersResult.recordset;
+
+            const summaryPromises = users.map(async (user) => {
+                const result = await pool.request()
+                    .input('userId', sql.NVarChar, user.userId)
+                    .input('start', sql.DateTime, start)
+                    .input('end', sql.DateTime, end)
+                    .query('SELECT * FROM measurements WHERE userId = @userId AND date >= @start AND date <= @end');
+                const measurements = result.recordset;
+
+                if (measurements.length === 0) {
+                    return { userId: user.userId, averageSystolic: 0, averageDiastolic: 0, outliers: 0 };
+                }
+
+                const totalSys = measurements.reduce((sum, m) => sum + m.systolic, 0);
+                const totalDia = measurements.reduce((sum, m) => sum + m.diastolic, 0);
+                const avgSys = totalSys / measurements.length;
+                const avgDia = totalDia / measurements.length;
+
+                const outliers = measurements.filter(m =>
+                    Math.abs(m.systolic - avgSys) > avgSys * 0.2 ||
+                    Math.abs(m.diastolic - avgDia) > avgDia * 0.2
+                ).length;
+
+                return {
+                    userId: user.userId,
+                    averageSystolic: avgSys,
+                    averageDiastolic: avgDia,
+                    outliers
+                };
+            });
+
+            const summary = await Promise.all(summaryPromises);
+            res.json({ month, summary });
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ error: 'שגיאה בקריאה' });
+        }
+    });
+
+    return router;
