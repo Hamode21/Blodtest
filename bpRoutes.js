@@ -69,20 +69,23 @@ module.exports = (db) => { // מקבל את ה-db כפרמטר
             date: date || new Date().toISOString(),
         };
 
-        db.run(
-            `INSERT INTO measurements (userId, systolic, diastolic, pulse, date) VALUES (?, ?, ?, ?, ?)`,
-            [userId, sys, dia, pul, newMeasurement.date],
-            function(err) {
-                if (err) {
-                    return res.status(500).json({ error: 'שגיאה בשמירה' });
-                }
-                res.status(201).json({
-                    message: 'המדידה נשמרה',
-                    measurement: newMeasurement
-                });
-            }
-        );
+try {
+    const pool = await sql.connect();
+    await pool.request()
+        .input('userId', sql.NVarChar, userId)
+        .input('systolic', sql.Int, sys)
+        .input('diastolic', sql.Int, dia)
+        .input('pulse', sql.Int, pul)
+        .input('date', sql.DateTime, newMeasurement.date)
+        .query('INSERT INTO measurements (userId, systolic, diastolic, pulse, date) VALUES (@userId, @systolic, @diastolic, @pulse, @date)');
+    res.status(201).json({
+        message: 'המדידה נשמרה',
+        measurement: newMeasurement
     });
+} catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'שגיאה בשמירה' });
+}
 
     /**
      * @swagger
