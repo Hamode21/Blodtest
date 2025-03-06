@@ -164,14 +164,22 @@ try {
             params.push(startDate, endDate);
         }
 
-        db.all(query, params, (err, rows) => {
-            if (err) {
-                return res.status(500).json({ error: 'שגיאה בקריאה' });
-            }
-            if (rows.length === 0) {
-                return res.status(404).json({ error: 'אין נתונים למשתמש הזה' });
-            }
-
+try {
+    const pool = await sql.connect();
+    const result = await pool.request()
+        .input('userId', sql.NVarChar, userId)
+        .input('startDate', sql.DateTime, startDate || null)
+        .input('endDate', sql.DateTime, endDate || null)
+        .query(query);
+    if (result.recordset.length === 0) {
+        return res.status(404).json({ error: 'אין נתונים למשתמש הזה' });
+    }
+    const measurements = result.recordset;
+    // חישוב ממוצעים והדגשות...
+} catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'שגיאה בקריאה' });
+}
             const totalSys = rows.reduce((sum, m) => sum + m.systolic, 0);
             const totalDia = rows.reduce((sum, m) => sum + m.diastolic, 0);
             const avgSys = totalSys / rows.length;
