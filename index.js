@@ -8,6 +8,17 @@ const sqlite3 = require('sqlite3').verbose(); // חדש - SQLite
 const app = express();
 const port = 3000;
 
+// הגדרת חיבור ל-SQL Server
+const dbConfig = {
+    user: 'sa', // שנה לשם המשתמש שלך 
+    password: 'your_password', // שנה לסיסמה שלך
+    server: 'localhost', 
+    database: 'BloodPressureDB', 
+    options: {
+        encrypt: false, 
+        trustServerCertificate: true 
+    }
+
 
 // Middleware בסיסי
 app.use(express.json());
