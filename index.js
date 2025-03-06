@@ -8,25 +8,6 @@ const sqlite3 = require('sqlite3').verbose(); // חדש - SQLite
 const app = express();
 const port = 3000;
 
-// חיבור ל-SQLite
-const db = new sqlite3.Database('bp_database.db', (err) => {
-    if (err) {
-        console.error('שגיאה בחיבור לבסיס נתונים:', err.message);
-    } else {
-        console.log('מחובר לבסיס נתונים SQLite');
-        // יצירת טבלה אם היא לא קיימת
-        db.run(`
-            CREATE TABLE IF NOT EXISTS measurements (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                userId TEXT NOT NULL,
-                systolic INTEGER NOT NULL,
-                diastolic INTEGER NOT NULL,
-                pulse INTEGER,
-                date TEXT NOT NULL
-            )
-        `);
-    }
-});
 
 // Middleware בסיסי
 app.use(express.json());
