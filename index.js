@@ -18,7 +18,15 @@ const dbConfig = {
         encrypt: false, 
         trustServerCertificate: true 
     }
+};
 
+// חיבור ל-SQL Server
+sql.connect(dbConfig).then(pool => {
+    console.log('מחובר ל-SQL Server');
+   
+}).catch(err => {
+    console.error('שגיאה בחיבור לבסיס נתונים:', err);
+});
 
 // Middleware בסיסי
 app.use(express.json());
